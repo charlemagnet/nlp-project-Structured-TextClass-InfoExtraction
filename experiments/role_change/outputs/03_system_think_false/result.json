@@ -1,0 +1,16 @@
+{
+  "experiment": "03_system_think_false",
+  "instruction_role": "system",
+  "think": false,
+  "time_seconds": 46.65,
+  "content_length": 14307,
+  "thinking_length": 0,
+  "inline_think_marker": true,
+  "raw_json_success": false,
+  "after_think_json_success": true,
+  "schema_valid": true,
+  "expected_category": "World",
+  "predicted_category": "Business",
+  "category_correct": false,
+  "done_reason": "stop"
+}

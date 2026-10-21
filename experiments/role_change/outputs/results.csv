@@ -1,0 +1,5 @@
+experiment,instruction_role,think,time_seconds,content_length,thinking_length,inline_think_marker,raw_json_success,after_think_json_success,schema_valid,expected_category,predicted_category,category_correct,done_reason
+01_user_think_false,user,False,39.96,10200,0,True,False,True,True,World,Business,False,stop
+02_user_think_true,user,True,28.51,119,8781,False,True,False,True,World,Business,False,stop
+03_system_think_false,system,False,46.65,14307,0,True,False,True,True,World,Business,False,stop
+04_system_think_true,system,True,28.9,119,8895,False,True,False,True,World,Business,False,stop

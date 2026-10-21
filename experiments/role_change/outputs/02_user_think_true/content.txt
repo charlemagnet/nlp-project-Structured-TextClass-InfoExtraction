@@ -1,0 +1,6 @@
+{
+    "category": "Business",
+    "persons": [],
+    "organizations": ["AFP"],
+    "locations": ["Scotland", "Islay"]
+}

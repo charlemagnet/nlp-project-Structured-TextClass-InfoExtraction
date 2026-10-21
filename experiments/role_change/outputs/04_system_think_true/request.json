@@ -1,0 +1,19 @@
+{
+  "model": "qwen3:4b",
+  "messages": [
+    {
+      "role": "system",
+      "content": "\nYou are a news classification and named entity extraction system.\n\nTasks:\n1. Classify the news article into exactly one category:\n   World, Sports, Business, Sci/Tech.\n\n2. Extract named entities:\n   - persons\n   - organizations\n   - locations\n\nReturn only one valid JSON object with these keys:\n{\n    \"category\": \"Business\",\n    \"persons\": [],\n    \"organizations\": [],\n    \"locations\": []\n}\n\nUse only the four allowed categories.\nExtract only entities explicitly mentioned in the article.\nIf no entities are found, return an empty list.\nDo not add explanations, markdown or extra text.\n"
+    },
+    {
+      "role": "user",
+      "content": "News article:\nScotch Whisky eyes Asian and Eastern European markets (AFP) AFP - A favourite tipple among connoisseurs the world over, whisky is treated with almost religious reverence on the Hebridean island of Islay, home to seven of Scotland's single malt distilleries."
+    }
+  ],
+  "think": true,
+  "options": {
+    "temperature": 0,
+    "seed": 42,
+    "num_predict": 4096
+  }
+}
