@@ -1,0 +1,15 @@
+{
+  "experiment": "02_json_mode",
+  "time_seconds": 1.13,
+  "raw_json_success": true,
+  "recovered_json_success": false,
+  "schema_valid": true,
+  "pydantic_valid": true,
+  "raw_schema_success": true,
+  "content_length": 107,
+  "thinking_length": 0,
+  "expected_category": "World",
+  "predicted_category": "Business",
+  "category_correct": false,
+  "done_reason": "stop"
+}

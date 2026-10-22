@@ -68,20 +68,25 @@ def build_messages(news_text, instruction_role="system"):
 
 
 # Send news to the local LLM
-def analyze_news(news_text, instruction_role="system", think=False):
 
+def analyze_news(
+    news_text,
+    instruction_role="system",
+    think=False,
+    response_format=None
+):
     messages = build_messages(news_text, instruction_role)
 
     response = chat(
         model=MODEL,
         messages=messages,
         think=think,
+        format=response_format,
         stream=False,
         options=OPTIONS
     )
 
     return response
-
 
 # Run directly for a quick test
 if __name__ == "__main__":

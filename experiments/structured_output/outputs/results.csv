@@ -1,0 +1,4 @@
+experiment,time_seconds,raw_json_success,recovered_json_success,schema_valid,pydantic_valid,raw_schema_success,content_length,thinking_length,expected_category,predicted_category,category_correct,done_reason
+01_prompt_only,52.5,False,True,True,True,False,15712,0,World,Business,False,stop
+02_json_mode,1.13,True,False,True,True,True,107,0,World,Business,False,stop
+03_json_schema,1.03,True,False,True,True,True,107,0,World,Business,False,stop

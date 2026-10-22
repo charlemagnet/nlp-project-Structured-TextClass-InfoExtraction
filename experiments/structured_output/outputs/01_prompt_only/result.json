@@ -1,0 +1,15 @@
+{
+  "experiment": "01_prompt_only",
+  "time_seconds": 52.5,
+  "raw_json_success": false,
+  "recovered_json_success": true,
+  "schema_valid": true,
+  "pydantic_valid": true,
+  "raw_schema_success": false,
+  "content_length": 15712,
+  "thinking_length": 0,
+  "expected_category": "World",
+  "predicted_category": "Business",
+  "category_correct": false,
+  "done_reason": "stop"
+}
