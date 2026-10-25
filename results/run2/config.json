@@ -1,0 +1,14 @@
+{
+  "model": "qwen3:4b",
+  "options": {
+    "temperature": 0,
+    "seed": 42,
+    "num_predict": 4096
+  },
+  "instruction_role": "system",
+  "think": false,
+  "format": "json_schema",
+  "prompt_version": "v2_category_definitions",
+  "dataset_sha256": "dc8ecf52e176cbef8bab9b346a0400b3ce7ee1e4dde0a9b8a6e1839ec25a4d7c",
+  "dataset_size": 120
+}

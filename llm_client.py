@@ -2,6 +2,7 @@
 import json
 from pathlib import Path
 from ollama import chat
+from prompts import TASK_INSTRUCTIONS
 
 # Project settings
 PROJECT_DIR = Path(__file__).resolve().parent
@@ -14,34 +15,6 @@ OPTIONS = {
     "seed": 42,
     "num_predict": 4096
 }
-
-# Instructions used for all news articles
-TASK_INSTRUCTIONS = """
-You are a news classification and named entity extraction system.
-
-Tasks:
-1. Classify the news article into exactly one category:
-   World, Sports, Business, Sci/Tech.
-
-2. Extract named entities:
-   - persons
-   - organizations
-   - locations
-
-Return only one valid JSON object with these keys:
-{
-    "category": "Business",
-    "persons": [],
-    "organizations": [],
-    "locations": []
-}
-
-Use only the four allowed categories.
-Extract only entities explicitly mentioned in the article.
-If no entities are found, return an empty list.
-Do not add explanations, markdown or extra text.
-"""
-
 
 # Load evaluation dataset
 def load_samples():

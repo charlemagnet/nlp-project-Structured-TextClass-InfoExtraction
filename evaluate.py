@@ -1,52 +1,43 @@
 import argparse
 import csv
-import json 
+import hashlib
+import json
+import re
 from pathlib import Path
 from time import perf_counter
 
 from pydantic import ValidationError
 
-from llm_client import analyze_news, load_samples
-from json_parser import parse_llm_output
+from llm_client import (
+    analyze_news,
+    load_samples,
+    MODEL,
+    OPTIONS,
+    DATA_FILE
+)
+
+from prompts import TASK_INSTRUCTIONS, PROMPT_VERSION
 from schemas import NewsAnalysis
+from json_parser import parse_llm_output
+from report_results import generate_report
 
-# Project settings
-RESULTS_DIR = Path(__file__).resolve().parent / "results"
 
-PREDICTIONS_FILE = RESULTS_DIR / "predictions.jsonl"
-CSV_FILE = RESULTS_DIR / "results.csv"
-SUMMARY_FILE = RESULTS_DIR / "summary.json"
-
+ROOT = Path(__file__).resolve().parent
 CATEGORIES = ["World", "Sports", "Business", "Sci/Tech"]
 
-# Load previous evaluated samples
-def load_previous_results():
 
-    if not PREDICTIONS_FILE.exists():
-        return {}
-
-    previous = {}
-
-    with open(PREDICTIONS_FILE, "r", encoding="utf-8") as f:
-        for line in f:
-            if line.strip():
-                record = json.loads(line)
-                previous[record["sample_id"]] = record
-
-    return previous
-
-# Evaluate a single news article
 def evaluate_one(sample_id, sample):
 
-    expected_category = CATEGORIES[sample["label"]]
+    expected = CATEGORIES[sample["label"]]
 
-    record = {
+    row = {
         "sample_id": sample_id,
         "news_text": sample["text"],
-        "expected_category": expected_category,
+        "expected_category": expected,
         "predicted_category": None,
         "request_ok": False,
         "raw_json_success": False,
+        "recovered_json_success": False,
         "schema_valid": False,
         "category_correct": False,
         "model_response": None,
@@ -54,14 +45,12 @@ def evaluate_one(sample_id, sample):
         "parse_error": None,
         "error": None,
         "done_reason": None,
-        "recovered_json_success": False,
         "time_seconds": None
     }
 
     start = perf_counter()
 
     try:
-        # Step 1: Call the local LLM
         response = analyze_news(
             sample["text"],
             instruction_role="system",
@@ -69,85 +58,152 @@ def evaluate_one(sample_id, sample):
             response_format=NewsAnalysis.model_json_schema()
         )
 
-        record["request_ok"] = True
-        record["done_reason"] = response.done_reason
+        row["request_ok"] = True
+        row["done_reason"] = response.done_reason
 
         content = response.message.content or ""
-        record["model_response"] = content
+        row["model_response"] = content
 
-        # Step 2: Parse the JSON
         parsed = parse_llm_output(content)
 
-        record["raw_json_success"] = parsed["raw_json_success"]
-        record["recovered_json_success"] = parsed["recovered_json_success"]
-        record["parse_error"] = parsed["first_error"]
+        row["raw_json_success"] = parsed["raw_json_success"]
+        row["recovered_json_success"] = parsed["recovered_json_success"]
+        row["parse_error"] = parsed["first_error"]
+        row["parsed_data"] = parsed["data"]
 
-        data = parsed["data"]
-        record["parsed_data"] = data
+        if isinstance(parsed["data"], dict):
 
-        # Step 3: Validate data with Pydantic
-        if isinstance(data, dict):
-
-            record["predicted_category"] = data.get("category")
+            row["predicted_category"] = (
+                parsed["data"].get("category")
+            )
 
             try:
-                NewsAnalysis.model_validate(data, strict=True)
-                record["schema_valid"] = True
+                NewsAnalysis.model_validate(
+                    parsed["data"],
+                    strict=True
+                )
+                row["schema_valid"] = True
 
             except ValidationError as error:
-                record["error"] = str(error)
+                row["error"] = str(error)
 
-        # Step 4: Compare prediction with actual label
-        record["category_correct"] = (
-            record["schema_valid"]
-            and record["predicted_category"] == expected_category
+        row["category_correct"] = (
+            row["schema_valid"]
+            and row["predicted_category"] == expected
         )
 
     except Exception as error:
-        # A single faile sample must not stop the experiment
-        record["error"] = f"{type(error).__name__}: {error}"
+        row["error"] = f"{type(error).__name__}: {error}"
 
     finally:
-        record["time_seconds"] = round(
+        row["time_seconds"] = round(
             perf_counter() - start, 2
         )
 
-    return record
+    return row
 
-# Calculate metrics and save reports
-def save_reports(records):
 
-    records = sorted(
-        records,
-        key=lambda item: item["sample_id"]
-    )
+def prepare_run(folder, dataset):
 
-    total = len(records)
-
-    raw_count = sum(r["raw_json_success"] for r in records)
-    recovered_count = sum(r["recovered_json_success"] for r in records)
-    schema_count = sum(r["schema_valid"] for r in records)
-    correct_count = sum(r["category_correct"] for r in records)
-    response_count = sum(r["request_ok"] for r in records)
-
-    summary = {
-        "total_samples": total,
-        "responses_received": response_count,
-        "request_failures": total - response_count,
-        "raw_json_success_count": raw_count,
-        "raw_json_success_rate": round(100 * raw_count / total, 2),
-        "recovered_only_count": recovered_count,
-        "schema_valid_count": schema_count,
-        "schema_valid_rate": round(100 * schema_count / total, 2),
-        "correct_category_count": correct_count,
-        "category_accuracy": round(100 * correct_count / total, 2)
+    # Save all settings needed to identify this experiment
+    config = {
+        "model": MODEL,
+        "options": OPTIONS,
+        "instruction_role": "system",
+        "think": False,
+        "format": "json_schema",
+        "prompt_version": PROMPT_VERSION,
+        "dataset_sha256": hashlib.sha256(
+            DATA_FILE.read_bytes()
+        ).hexdigest(),
+        "dataset_size": len(dataset)
     }
 
-    # Save summary as JSON
-    with open(SUMMARY_FILE, "w", encoding="utf-8") as f:
-        json.dump(summary, f, indent=2, ensure_ascii=False)
+    config_path = folder / "config.json"
+    prompt_path = folder / "prompt.txt"
 
-    # Save compact results as CSV
+    # Resume only if the old settings match
+    if config_path.exists() and prompt_path.exists():
+
+        old_config = json.loads(
+            config_path.read_text(encoding="utf-8")
+        )
+
+        old_prompt = prompt_path.read_text(
+            encoding="utf-8"
+        )
+
+        if old_config != config or old_prompt != TASK_INSTRUCTIONS:
+            raise RuntimeError(
+                "Run settings changed. Use a NEW run folder."
+            )
+
+    elif any(folder.iterdir()):
+        raise RuntimeError(
+            "Nonempty run folder without a complete snapshot. "
+            "Refusing to mix runs."
+        )
+
+    else:
+        config_path.write_text(
+            json.dumps(config, indent=2, ensure_ascii=False),
+            encoding="utf-8"
+        )
+
+        prompt_path.write_text(
+            TASK_INSTRUCTIONS,
+            encoding="utf-8"
+        )
+
+
+def read_previous(file):
+
+    if not file.exists():
+        return {}
+
+    previous = {}
+
+    with file.open("r", encoding="utf-8") as f:
+        for line in f:
+
+            if line.strip():
+                row = json.loads(line)
+                previous[row["sample_id"]] = row
+
+    return previous
+
+
+def write_summary(run_dir, rows):
+
+    n = len(rows)
+
+    def count(key):
+        return sum(bool(r[key]) for r in rows)
+
+    summary = {
+        "total_samples": n,
+        "responses_received": count("request_ok"),
+        "request_failures": n - count("request_ok"),
+        "raw_json_success_count": count("raw_json_success"),
+        "raw_json_success_rate": round(
+            100 * count("raw_json_success") / n, 2
+        ),
+        "recovered_only_count": count("recovered_json_success"),
+        "schema_valid_count": count("schema_valid"),
+        "schema_valid_rate": round(
+            100 * count("schema_valid") / n, 2
+        ),
+        "correct_category_count": count("category_correct"),
+        "category_accuracy": round(
+            100 * count("category_correct") / n, 2
+        )
+    }
+
+    (run_dir / "summary.json").write_text(
+        json.dumps(summary, indent=2),
+        encoding="utf-8"
+    )
+
     columns = [
         "sample_id",
         "expected_category",
@@ -162,79 +218,98 @@ def save_reports(records):
         "error"
     ]
 
-    with open(CSV_FILE, "w", newline="", encoding="utf-8") as f:
+    with (run_dir / "results.csv").open(
+        "w", encoding="utf-8", newline=""
+    ) as f:
+
         writer = csv.DictWriter(f, fieldnames=columns)
         writer.writeheader()
 
-        for record in records:
+        for row in rows:
             writer.writerow({
-                column: record[column]
+                column: row.get(column)
                 for column in columns
             })
 
     return summary
 
+
 def main():
 
     parser = argparse.ArgumentParser()
+
+    parser.add_argument("--run", required=True)
     parser.add_argument("--limit", type=int, default=5)
+
     args = parser.parse_args()
 
-    # Load our 120 news articles
+    # Valid names: run1, run2, run3...
+    if not re.fullmatch(r"run[1-9][0-9]*", args.run):
+        parser.error("Run name must be run1, run2, run3, ...")
+
     dataset = load_samples()
 
     if not 1 <= args.limit <= len(dataset):
         parser.error(
-            f"--limit must be between 1 and {len(dataset)}"
+            f"Limit must be 1..{len(dataset)}"
         )
 
-    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+    # Create a separate folder for this run
+    folder = ROOT / "results" / args.run
+    folder.mkdir(parents=True, exist_ok=True)
 
-    # Load completed evaluations
-    previous = load_previous_results()
+    prepare_run(folder, dataset)
 
-    # Process articles one by one
-    for index in range(args.limit):
+    prediction_path = folder / "predictions.jsonl"
 
-        if index in previous:
-            print(f"Sample {index + 1}: already evaluated, skipping")
+    previous = read_previous(prediction_path)
+
+    for i in range(args.limit):
+
+        if i in previous:
+            print(
+                f"Sample {i + 1}: already evaluated, skipping"
+            )
             continue
 
-        sample = dataset[index]
+        print(f"Evaluating {i + 1}/{args.limit}")
 
-        print(f"\nEvaluating {index + 1}/{args.limit}")
+        result = evaluate_one(i, dataset[i])
 
-        result = evaluate_one(index, sample)
+        # Save after each model response
+        with prediction_path.open(
+            "a", encoding="utf-8"
+        ) as f:
+            f.write(
+                json.dumps(result, ensure_ascii=False) + "\n"
+            )
 
-        # Save every result immediately
-        with open(PREDICTIONS_FILE, "a", encoding="utf-8") as f:
-            f.write(json.dumps(result, ensure_ascii=False) + "\n")
+        previous[i] = result
 
-        previous[index] = result
+        print(
+            "Expected:", result["expected_category"],
+            "Predicted:", result["predicted_category"],
+            "Correct:", result["category_correct"]
+        )
 
-        print("Expected:", result["expected_category"])
-        print("Predicted:", result["predicted_category"])
-        print("Raw JSON:", result["raw_json_success"])
-        print("Schema valid:", result["schema_valid"])
-        print("Category correct:", result["category_correct"])
+    rows = [previous[i] for i in range(args.limit)]
 
-        if result["error"]:
-            print("Error:", result["error"][:200])
+    summary = write_summary(folder, rows)
 
-    # Generate reports for the requested sample range
-    selected_results = [
-        previous[i]
-        for i in range(args.limit)
-    ]
+    print("\nSummary:", summary)
 
-    summary = save_reports(selected_results)
+    # Automatically compare with the previous run
+    previous_name = f"run{int(args.run[3:]) - 1}"
 
-    print("\n=== EVALUATION SUMMARY ===")
+    baseline = (
+        previous_name
+        if (
+            ROOT / "results" / previous_name / "results.csv"
+        ).exists()
+        else None
+    )
 
-    for key, value in summary.items():
-        print(f"{key}: {value}")
-
-    print("\nResults saved to:", RESULTS_DIR)
+    generate_report(args.run, compare=baseline)
 
 
 if __name__ == "__main__":
