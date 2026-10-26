@@ -1,7 +1,7 @@
 
 import json
 from pathlib import Path
-from json_parser import parse_llm_output
+from core.json_parser import parse_llm_output
 
 # Create an example of valid JSON
 valid_data = {

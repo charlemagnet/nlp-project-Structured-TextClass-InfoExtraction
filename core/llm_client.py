@@ -2,10 +2,10 @@
 import json
 from pathlib import Path
 from ollama import chat
-from prompts import TASK_INSTRUCTIONS
+from core.prompts import TASK_INSTRUCTIONS
 
 # Project settings
-PROJECT_DIR = Path(__file__).resolve().parent
+PROJECT_DIR = Path(__file__).resolve().parent.parent
 DATA_FILE = PROJECT_DIR / "data" / "evaluation_samples.json"
 
 MODEL = "qwen3:4b"

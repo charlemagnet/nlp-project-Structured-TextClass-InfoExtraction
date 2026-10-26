@@ -1,0 +1,9 @@
+{
+  "model": "qwen3:4b",
+  "temperature": 0,
+  "seed": 42,
+  "num_predict": 1024,
+  "format": "prompt_only",
+  "think": false,
+  "sample_count": 120
+}

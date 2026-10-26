@@ -1,0 +1,13 @@
+{
+  "total": 5,
+  "correct": 3,
+  "wrong": 2,
+  "accuracy": 60.0,
+  "raw_json": 0,
+  "raw_json_rate": 0.0,
+  "schema_valid": 5,
+  "schema_rate": 100.0,
+  "recovered": 5,
+  "request_failures": 0,
+  "average_seconds": 40.02
+}

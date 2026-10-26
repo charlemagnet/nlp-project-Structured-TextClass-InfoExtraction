@@ -12,7 +12,7 @@ matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt
 
-from llm_client import load_samples
+from core.llm_client import load_samples
 
 
 ROOT = Path(__file__).resolve().parent

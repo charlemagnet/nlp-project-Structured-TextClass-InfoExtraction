@@ -1,0 +1,11 @@
+{
+  "model": "qwen3:4b",
+  "temperature": 1,
+  "format": "schema",
+  "seed": 42,
+  "think": false,
+  "num_predict": 4096,
+  "role": "system",
+  "dataset_sha256": "dc8ecf52e176cbef8bab9b346a0400b3ce7ee1e4dde0a9b8a6e1839ec25a4d7c",
+  "prompt_sha256": "1a6983913aff30cf7eefe2382f73a9db4777e5ba9b937d3d1c6b9d446e586a31"
+}

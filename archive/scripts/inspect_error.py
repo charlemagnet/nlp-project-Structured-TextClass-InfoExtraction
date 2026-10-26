@@ -1,5 +1,5 @@
 import pandas as pd
-from llm_client import load_samples
+from core.llm_client import load_samples
 
 # Load evaluation results and original news
 results = pd.read_csv("results/results.csv")

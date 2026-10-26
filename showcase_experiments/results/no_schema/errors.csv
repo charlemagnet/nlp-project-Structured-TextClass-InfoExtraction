@@ -1,0 +1,3 @@
+﻿id,actual,predicted,article,possible_reason,error
+0,World,Business,"Scotch Whisky eyes Asian and Eastern European markets (AFP) AFP - A favourite tipple among connoisseurs the world over, whisky is treated with almost religious reverence on the Hebridean island of Islay, home to seven of Scotland's single malt distilleries.",Uluslararası olay ve ticari boyut karışmış olabilir.,
+1,Business,World,"Study: 39 Million Americans In Working Poor Families WASHINGTON -- A new report indicates that one in every five US jobs pays less than a poverty-level wage for a family of four. As a result, nearly 39 million Americans, including 20 million children, are members ",Ekonomi ve uluslararası gelişme ayrımı belirsiz olabilir.,

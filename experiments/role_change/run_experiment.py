@@ -9,7 +9,7 @@ from time import perf_counter
 PROJECT_DIR = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROJECT_DIR))
 
-from llm_client import (
+from core.llm_client import (
     MODEL,
     OPTIONS,
     load_samples,

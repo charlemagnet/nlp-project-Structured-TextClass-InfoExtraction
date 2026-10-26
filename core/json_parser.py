@@ -5,7 +5,7 @@ import re
 CATEGORIES = ["World", "Sports", "Business", "Sci/Tech"]
 
 # Required JSON fields
-REQUİRED_KEYS = {
+REQUIRED_KEYS = {
     "category",
     "persons",
     "organizations",
@@ -18,7 +18,7 @@ def validate_schema(data):
         return False
     
     # Check required fields
-    if set(data.keys()) != REQUİRED_KEYS:
+    if set(data.keys()) != REQUIRED_KEYS:
         return False
 
     # Check category

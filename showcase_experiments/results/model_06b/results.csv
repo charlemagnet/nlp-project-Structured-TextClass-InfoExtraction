@@ -1,0 +1,6 @@
+﻿id,expected,predicted,correct,raw_json,recovered,schema_valid,seconds,tokens,done_reason,error
+0,World,World,True,True,False,True,53.97,25,stop,
+1,Business,Business,True,True,False,True,0.2,25,stop,
+2,Sci/Tech,Business,False,True,False,True,0.18,25,stop,
+3,Sci/Tech,Sports,False,True,False,True,0.22,25,stop,
+4,Sci/Tech,Business,False,True,False,True,0.16,25,stop,

@@ -8,7 +8,7 @@ from time import perf_counter
 
 from pydantic import ValidationError
 
-from llm_client import (
+from core.llm_client import (
     analyze_news,
     load_samples,
     MODEL,
@@ -16,9 +16,9 @@ from llm_client import (
     DATA_FILE
 )
 
-from prompts import TASK_INSTRUCTIONS, PROMPT_VERSION
-from schemas import NewsAnalysis
-from json_parser import parse_llm_output
+from core.prompts import TASK_INSTRUCTIONS, PROMPT_VERSION
+from core.schemas import NewsAnalysis
+from core.json_parser import parse_llm_output
 from report_results import generate_report
 
 

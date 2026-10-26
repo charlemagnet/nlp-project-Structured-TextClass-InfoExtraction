@@ -11,9 +11,9 @@ from pydantic import ValidationError
 PROJECT_DIR = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROJECT_DIR))
 
-from llm_client import analyze_news, load_samples
-from json_parser import parse_llm_output
-from schemas import NewsAnalysis
+from core.llm_client import analyze_news, load_samples
+from core.json_parser import parse_llm_output
+from core.schemas import NewsAnalysis
 
 OUTPUT_DIR = Path(__file__).resolve().parent / "outputs"
 
