@@ -1,0 +1,21 @@
+{
+  "requested_samples": 125,
+  "processed_samples": 125,
+  "completed": true,
+  "request_failures": 0,
+  "raw_json_success": "125/125",
+  "after_cleaning_json_success": "125/125",
+  "schema_valid": "125/125",
+  "dataset_results": {
+    "requested_samples": 120,
+    "processed_samples": 120,
+    "correct_categories": 91,
+    "classification_accuracy": 75.83
+  },
+  "new_samples": {
+    "requested_samples": 5,
+    "processed_samples": 5,
+    "note": "Informal expected categories; inspect outputs individually."
+  },
+  "note": "Classification accuracy uses dataset examples only; no entity F1 is computed in this run."
+}

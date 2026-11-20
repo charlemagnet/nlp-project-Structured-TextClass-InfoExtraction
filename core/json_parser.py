@@ -46,7 +46,7 @@ def clean_response(text):
 
     # Extract the last Markdown code block if present
     blocks = re.findall(
-        r"'''(?:json)?\s*(.*?)'''",
+        r"```(?:json)?\s*(.*?)```",
         text,
         flags=re.DOTALL | re.IGNORECASE
     )
@@ -109,10 +109,3 @@ def parse_llm_output(raw_text):
     result["schema_valid"] = validate_schema(parsed)
 
     return result
-    
-
-
-
-
-
-    

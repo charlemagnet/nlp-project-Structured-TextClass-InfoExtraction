@@ -1,0 +1,127 @@
+RUN6 VE RUN9 MODEL KARŞILAŞTIRMASI
+====================================
+Veri: AG News değerlendirme örnekleri, AYNI 120 HABER
+
+1) DENEYİN AMACI VE AYARLARI
+----------------------------
+
+                        RUN6                  RUN9
+Model:                  qwen3:4b-instruct     qwen3:0.6b
+Yaklaşık parametre:     4 milyar              0,6 milyar
+Temperature:            0                     0
+Seed:                   42                    42
+num_predict:            1024                  1024
+Thinking:               False                 False
+Çıktı:                  prompt_only           prompt_only
+JSON Schema / format:   Kullanılmadı          Kullanılmadı
+Test edilen haber:      120                   120
+
+2) GENEL SONUÇLAR
+-----------------
+Ölçüm                          RUN6               RUN9
+Ham JSON ilk deneme            120/120 (%100)       120/120 (%100)
+Python yapısal doğrulama        120/120 (%100)       120/120 (%100)
+JSON temizleme ile kurtarılan  0                  0
+Doğru sınıflandırma            92                  75
+Yanlış sınıflandırma           28                  45
+Classification Accuracy        %76.67             %62.50
+
+Accuracy farkı: -14.17 yüzde puan (Run9 - Run6).
+YORUM: İki model de 120/120 geçerli JSON verdi, fakat Run9'un
+kategori sınıflandırma başarısı daha düşük. Geçerli JSON, içerik
+doğruluğunu garanti etmez.
+
+3) HIZ KARŞILAŞTIRMASI
+---------------------
+KULLANICI GÖZLEMİ (yaklaşık):
+  Run6: haber başına yaklaşık 2 saniye
+  Run9: haber başına yaklaşık 0,15 saniye
+
+120 haber süreleri toplamı   78.61 sn       22.99 sn
+
+Dosyalardaki genel ortalamaya göre Run9 yaklaşık 3.42 kat;
+4) KATEGORİ BAZINDA DOĞRU TAHMİN SAYISI
+--------------------------------------
+Gerçek kategori  RUN6         RUN9
+World      27/30        29/30
+Sports     29/30        25/30
+Business   17/30         7/30
+Sci/Tech   19/30        14/30
+
+5) AYNI HABERLERDE NELER DEĞİŞTİ?
+---------------------------------
+Kategori tahmini farklı olan haber sayısı: 30/120
+Run6 yanlış -> Run9 doğru: 5 haber
+ID'ler: 0, 64, 78, 83, 112
+Run6 doğru -> Run9 yanlış: 22 haber
+ID'ler: 5, 17, 26, 27, 36, 39, 44, 52, 53, 57, 59, 66, 77, 80, 84, 93, 98, 104, 107, 108, 109, 119
+İki model de doğru: 70 haber
+İki model de yanlış: 23 haber
+
+Birkaç gerçek örnek (ID, 0'dan başlar):
+
+ID 0 | Gerçek: World
+  Run6 tahmin: Sci/Tech (yanlış)
+  Run9 tahmin: World (doğru)
+  Haber: Scotch Whisky eyes Asian and Eastern European markets
+ID 5 | Gerçek: Sports
+  Run6 tahmin: Sports (doğru)
+  Run9 tahmin: World (yanlış)
+  Haber: Bekele, Isinbayeva top track athletes Names Ethiopian distance runner Kenenisa Bekele and Russian po
+ID 53 | Gerçek: Sci/Tech
+  Run6 tahmin: Sci/Tech (doğru)
+  Run9 tahmin: World (yanlış)
+  Haber: Sony Shows Smaller PlayStation 2
+ID 64 | Gerçek: Sports
+  Run6 tahmin: World (yanlış)
+  Run9 tahmin: Sports (doğru)
+  Haber: Athens coverage a winner for NBC NBC and its family of cable networks flooded American households wi
+ID 83 | Gerçek: World
+  Run6 tahmin: Business (yanlış)
+  Run9 tahmin: World (doğru)
+  Haber: ConocoPhillips boosts LUKoil stake to 10 percent
+
+6) ENTITY EXTRACTION KARŞILAŞTIRMASI
+------------------------------------
+Ölçüm                                       RUN6     RUN9
+Hiçbir kişi/kurum/konum çıkarılmayan haber  4/120    105/120
+En az 1 kişi adı çıkarılan haber            51        10
+En az 1 kuruluş çıkarılan haber             82        2
+En az 1 konum çıkarılan haber               72        5
+Kişi+kurum+konum listeleri farklı olan      114/120 haber
+
+Run9 çoğu haberde üç entity alanını da boş bıraktı. Bu yüzden
+'JSON geçerli' olsa bile 'bilgi çıkarımı kaliteli' diyemiyoruz.
+Altın standart NER etiketlerimiz olmadığı için bunlar NER accuracy,
+precision veya recall değil; yalnızca çıktı doluluğu/fark sayılarıdır.
+
+Gerçek JSON verilerinden bazı farklar:
+
+ID 3 | Haber başlangıcı: Opportunity Rover Stumbles Upon Rocky, Maybe Watery, Find (SPACE.com) SPACE.com - Alm...
+  Run6: {"category": "Sci/Tech", "persons": [], "organizations": ["NASA"], "locations": ["Mars"]}
+  Run9: {"category": "Sci/Tech", "persons": [], "organizations": [], "locations": []}
+ID 5 | Haber başlangıcı: Bekele, Isinbayeva top track athletes Names Ethiopian distance runner Kenenisa Bekele...
+  Run6: {"category": "Sports", "persons": ["Kenenisa Bekele", "Yelena Isinbayeva", "Hicham El Guerrouj"], "organizations": ["world track and field federation"], "locations": ["Athens"]}
+  Run9: {"category": "World", "persons": ["Bekele", "Isinbayeva"], "organizations": ["World Track and Field Federation"], "locations": []}
+ID 7 | Haber başlangıcı: Kmart to Sell 18 Stores to Home Depot  NEW YORK (Reuters) - Retailer Kmart Holdings C...
+  Run6: {"category": "Business", "persons": [], "organizations": ["Kmart Holdings Corp", "Home Depot Inc"], "locations": []}
+  Run9: {"category": "Business", "persons": [], "organizations": [], "locations": []}
+ID 10 | Haber başlangıcı: (Sports Network) - Carlos Beltran may be the newest Killer B in &lt;b&gt;...&lt;/b&gt...
+  Run6: {"category": "Sports", "persons": ["Carlos Beltran"], "organizations": ["Astros", "St. Louis Cardinals"], "locations": ["Minute Maid Park"]}
+  Run9: {"category": "Sports", "persons": [], "organizations": [], "locations": []}
+
+7) GENEL DEĞERLENDİRME
+----------------------
+- Run6 (4B-Instruct) sınıflandırmada daha başarılı: %76.67.
+- Run9 (0.6B) daha hızlı ama sınıflandırmada %62.50 elde etti.
+- İki modelde de first-try JSON success: %100 (120/120).
+- Run9'da 105/120 haberde tüm entity listeleri boş; bu durum
+  Information Extraction için ciddi bir sınırlama.
+- Dolayısıyla küçük model kullanmak hız kazandırırken görev başarısı
+  ve çıkarılan bilgi miktarında kayba yol açabilir.
+- Sonuçlar aynı 120 haber, aynı temperature=0 ve aynı seed=42
+  üzerinden elde edildi. Deneyde model etiketi değişti; model
+  ailesi/sürümü ve quantization gibi diğer özellikler de dikkate alınmalı.
+
+Kaynaklar: Run6 predictions.jsonl, Run9 predictions.jsonl,
+Run9 config.json ve summary.json (kullanıcının gönderdiği dosyalar).

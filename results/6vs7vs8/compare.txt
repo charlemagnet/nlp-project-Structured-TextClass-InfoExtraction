@@ -1,0 +1,103 @@
+UN6 – RUN7 – RUN8 | TEMPERATURE DENEYİ KARŞILAŞTIRMASI
+=======================================================
+Değiştirilen tek ayar:
+  Run6: temperature = 0
+  Run7: temperature = 0.5
+  Run8: temperature = 1.0
+
+Sabit ayarlar:
+  Model       : qwen3:4b-instruct
+  Seed        : 42
+  num_predict : 1024
+  think       : false
+  Yöntem      : prompt_only (JSON Schema / format="json" kullanılmadı)
+  Veri        : Aynı 120 haber
+
+2. SINIFLANDIRMA SONUÇLARI
+-------------------------
+                     Run6          Run7          Run8
+Temperature          0             0.5           1.0
+Toplam haber         120           120           120
+Doğru tahmin         92            92            92
+Yanlış tahmin        28            28            28
+Accuracy             %76,67        %76,67        %76,67
+
+
+3. HAM YANIT VE PARSE EDİLMİŞ JSON FARKLARI
+------------------------------------------
+Ham yanıt (model_response) farklılıkları:
+  Run6 – Run7: 16/120
+  Run6 – Run8: 17/120
+
+Parse edilmiş JSON (parsed_data) farklılıkları:
+  Run6 – Run7:  9/120
+  Run6 – Run8: 10/120
+  Run7 – Run8:  3/120
+r.
+
+4. RUN6 (T=0) İLE RUN8 (T=1) ARASINDAN GERÇEK ÖRNEKLER
+-----------------------------------------------------
+Aşağıdaki ID'ler predictions.jsonl içindeki sample_id değerleridir.
+
+ID 1 – Büyük/küçük harf farkı
+  Run6 locations: ["WASHINGTON", "US"]
+  Run8 locations: ["Washington", "US"]
+  Her ikisinde category: World
+  Yorum: Aynı konum, farklı büyük/küçük harf kullanımı.
+
+ID 21 – Yer adının yazım farkı
+  Run6 locations: ["OSCOW"]
+  Run8 locations: ["OSCW"]
+  Her ikisinde category: World
+  Yorum: İki yazım da şüpheli; doğru ad kaynak haberle doğrulanmalı.
+
+ID 29 – Kişi ve kurum çıkarımı farkı
+  Run6 persons: ["an expert with the United States Food and Drug Administration"]
+  Run6 organizations: ["United States Food and Drug Administration"]
+  Run8 persons: ["expert"]
+  Run8 organizations: ["United States Food and Drug Administration (FDA)"]
+  Her ikisinde category: World
+  Yorum: “expert” özel kişi adı değildir. Geçerli JSON, doğru NER
+  sonucu anlamına gelmez. Kurumun yazılışı da değişmiştir.
+
+ID 30 – Konum eklenmesi
+  Run6 locations: []
+  Run8 locations: ["Iraq"]
+  Her ikisinde category: World
+  Yorum: T=1 çıktısında yeni bir konum var; gerçekten haberde
+  geçip geçmediği kaynak metinle kontrol edilmeli.
+
+ID 37 – Yer adında harf biçimi değişikliği
+  Run6 locations: ["Morgantown, W.Va."]
+  Run8 locations: ["MORGANTOWN, W.Va."]
+  Her ikisinde category: Sports
+  Yorum: Aynı yer adı, farklı harf biçimi.
+
+5. JSON FORMATINA İLİŞKİN NOT
+----------------------------
+Run6 için doğrulanmış sonuçlar:
+  First-try JSON parsing : 120/120 (%100)
+  Yapısal doğrulama      : 120/120 (%100)
+  Temizleme ile kurtarma : 0
+
+Run7 ve Run8'in JSON parsing ve yapısal doğrulama yüzdeleri burada
+paylaşılan sonuçlarda bulunmadığından tahmin edilmedi.
+
+İlk denemede JSON'un parse edilmesi, doğru kategori tahmini yapıldığı
+veya çıkarılan entity'lerin doğru olduğu anlamına gelmez.
+
+6. GENEL SONUÇ
+-------------
+Temperature 0, 0.5 ve 1.0 değerleriyle yapılan üç çalıştırmada
+sınıflandırma doğruluğu %76,67 ve kategori tahminleri tamamen aynı
+kaldı. Bununla birlikte ham cevaplar ve JSON içindeki varlık
+çıkarımları bazı haberlerde değişti.
+
+Bu deney şunu gösteriyor: Temperature, üretilen yanıtı etkileyebilir,
+ancak bu etki mutlaka kategori kararına veya accuracy'ye yansımaz.
+Daha yüksek temperature'ın daha başarılı sınıflandırma veya daha
+doğru entity extraction sağlayacağı garanti değildir.
+
+Bu belge, Run6–Run8 için paylaşılan terminal çıktıları ve karşılaştırma
+verilerine dayanır; entity extraction için ayrıca elle etiketlenmiş
+bir doğruluk testi yapılmamıştır.

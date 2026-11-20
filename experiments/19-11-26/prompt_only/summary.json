@@ -1,0 +1,49 @@
+{
+  "total_samples": 120,
+  "request_failures": 0,
+  "raw_json_success_count": 120,
+  "raw_json_success_rate": 100.0,
+  "recovered_only_count": 0,
+  "after_cleaning_success_count": 120,
+  "after_cleaning_success_rate": 100.0,
+  "schema_valid_rate": 100.0,
+  "classification_accuracy": 76.67,
+  "gold_label_file": "data\\gold_labels.json",
+  "gold_label_sha256": "39e3a16c98e20d47278da03c139fbf4a147e7b7ba1b3f8bab2ebfeef20496ca3",
+  "entity_extraction_micro": {
+    "status": "complete",
+    "matching": "exact, case-sensitive; unique strings per sample and type",
+    "tp": 229,
+    "fp": 57,
+    "fn": 176,
+    "precision": 0.8007,
+    "recall": 0.5654,
+    "f1": 0.6628,
+    "by_type": {
+      "persons": {
+        "tp": 67,
+        "fp": 3,
+        "fn": 25,
+        "precision": 0.9571,
+        "recall": 0.7283,
+        "f1": 0.8272
+      },
+      "organizations": {
+        "tp": 88,
+        "fp": 28,
+        "fn": 80,
+        "precision": 0.7586,
+        "recall": 0.5238,
+        "f1": 0.6197
+      },
+      "locations": {
+        "tp": 74,
+        "fp": 26,
+        "fn": 71,
+        "precision": 0.74,
+        "recall": 0.5103,
+        "f1": 0.6041
+      }
+    }
+  }
+}

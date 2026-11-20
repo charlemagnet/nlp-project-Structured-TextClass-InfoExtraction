@@ -1,0 +1,13 @@
+{
+  "model": "qwen3:4b-instruct-2507-q4_K_M",
+  "temperature": 0,
+  "seed": 42,
+  "num_predict": 1024,
+  "num_ctx": 4096,
+  "think": false,
+  "format": "prompt_only",
+  "ollama_version": "ollama version is 0.35.1",
+  "dataset_sha256": "dc8ecf52e176cbef8bab9b346a0400b3ce7ee1e4dde0a9b8a6e1839ec25a4d7c",
+  "prompt_sha256": "7d567c92d5fcd0d2210a551c17c2da4a7ade890be2293ad99b5fb756bcb49e8d",
+  "schema": null
+}

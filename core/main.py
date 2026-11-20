@@ -6,10 +6,11 @@ from time import perf_counter
 from ollama import chat
 
 # Settings
-MODEL = "qwen3:4b-instruct"
+MODEL = "qwen3:4b-instruct-2507-q4_K_M"
 TEMPERATURE = 0
 SEED = 42
 NUM_PREDICT = 1024
+NUM_CTX = 4096
 CATEGORIES = ["World", "Sports", "Business", "Sci/Tech"]
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -102,6 +103,7 @@ def main():
         "temperature": TEMPERATURE,
         "seed": SEED,
         "num_predict": NUM_PREDICT,
+        "num_ctx": NUM_CTX,
         "format": "prompt_only",
         "think": False,
         "sample_count": len(samples)
@@ -144,7 +146,8 @@ def main():
                 options={
                     "temperature": TEMPERATURE,
                     "seed": SEED,
-                    "num_predict": NUM_PREDICT
+                    "num_predict": NUM_PREDICT,
+                    "num_ctx": NUM_CTX
                 }
             )
 
@@ -198,6 +201,7 @@ def main():
         "total_samples": total,
         "raw_json_success_rate": round(raw_count / total * 100, 2),
         "recovered_only_count": recovered,
+        "after_cleaning_json_success_rate": round((raw_count + recovered) / total * 100, 2),
         "schema_valid_rate": round(valid_count / total * 100, 2),
         "correct_category_count": correct,
         "category_accuracy": round(correct / total * 100, 2)

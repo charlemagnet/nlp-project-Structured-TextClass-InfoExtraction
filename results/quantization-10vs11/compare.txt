@@ -1,0 +1,130 @@
+RUN10 (Q4_K_M) – RUN11 (Q8_0) | QUANTIZATION KARŞILAŞTIRMASI
+======================================================================
+Deney: Aynı temel LLM ve aynı 120 haber üzerinde iki quantization hassasiyeti.
+Kaynaklar: Kullanıcının run10.zip dosyasındaki iki run sonucu ve ollama ps çıktıları.
+
+1. DENEY AYARLARI
+----------------------------------------------------------------------
+Run10: model=qwen3:4b-instruct-2507-q4_K_M
+  temperature=0, seed=42, num_predict=1024, think=False, format=prompt_only, sample_count=120
+Run11: model=qwen3:4b-instruct-2507-q8_0
+  temperature=0, seed=42, num_predict=1024, think=False, format=prompt_only, sample_count=120
+Prompt metinleri birebir aynı; 120 haberin kimliği, sırası ve gerçek etiketleri de aynı.
+Değişen ana değişken: ağırlıkların quantization biçimi (Q4_K_M / Q8_0).
+
+2. ANA SONUÇLAR
+----------------------------------------------------------------------
+Ölçüm                              Run10 / Q4        Run11 / Q8
+Modelin ollama ps bellek SIZE      3.2 GB            5.4 GB
+Yerleşim (ollama ps PROCESSOR)     %100 GPU          %22 CPU / %78 GPU
+Haber sayısı                       120               120
+İlk denemede ham JSON             120/120 (%100)    120/120 (%100)
+Yapısal doğrulama                  120/120 (%100)    120/120 (%100)
+JSON temizleme gerektiren         0                 0
+Doğru sınıflandırma                92                97
+Yanlış sınıflandırma               28                23
+Accuracy                           %76,67            %80,83
+Toplam kaydedilen süre             81,40 sn          325,19 sn
+İlk haberin süresi                 8,05 sn           24,89 sn
+İlk haber hariç ortalama          0,616 sn          2,524 sn
+İlk haber dahil ortalama          0,678 sn          2,710 sn
+
+Q8, 5 ek haberi doğru sınıflandırdı: +4,16 yüzde puan accuracy.
+Q8, ilk haber hariç yaklaşık 4,10 kat daha yavaş: 2,524 / 0,616.
+ollama ps raporunda Q8, Q4’e göre 2,2 GB (+%68,75) daha çok SIZE gösteriyor.
+NOT: ollama ps SIZE değerleri koşu anındaki toplam model belleği görünümüdür;
+disk boyutu ya da GPU VRAM kullanımının birebir ölçümü olarak yorumlanmamalı.
+NOT: Q8’in CPU’ya kısmen taşınması hız farkını etkiliyor. Bu sonuçlar yalnızca
+bit hassasiyetinin saf hesaplama maliyetini izole etmiyor.
+
+3. KATEGORİ BAZINDA DOĞRU TAHMİN SAYISI (HER SINIFTA 30 HABER)
+----------------------------------------------------------------------
+World     : Q4 27/30   Q8 27/30   fark +0
+Sports    : Q4 29/30   Q8 30/30   fark +1
+Business  : Q4 17/30   Q8 19/30   fark +2
+Sci/Tech  : Q4 19/30   Q8 21/30   fark +2
+
+4. HANGİ HABERLERİN KARARI DEĞİŞTİ?
+----------------------------------------------------------------------
+Kategori tahmini farklı haber: 5 / 120
+Q8 ile yanlış -> doğru: 5 haber
+Q8 ile doğru -> yanlış: 0 haber
+Düzelenler (ID / gerçek / Q4 / Q8):
+  ID  11 | Business | Sci/Tech -> Business
+     Haber: Broadband charges set to tumble The cost of broadband internet access is likely to fall after Ofcom ordered British Telecom to cut the amount it charges internet providers.
+  ID  38 | Business | World -> Business
+     Haber: Morningstar Faces Possible SEC Lawsuit  NEW YORK (Reuters) - U.S. securities regulators may file  suit against Morningstar Inc., a provider of mutual fund and  stock research, over incorrect data it published about a mutual  fund, the
+  ID  64 | Sports | World -> Sports
+     Haber: Athens coverage a winner for NBC NBC and its family of cable networks flooded American households with nearly nonstop coverage of the Athens Olympics, and the strategy - along with strong performances by the US teams in swimming and gy
+  ID 101 | Sci/Tech | World -> Sci/Tech
+     Haber: Greek, British Police Break Illegal Software Ring Greek and British police in a joint operation cracked a multi-million illegal software sales ring, arresting two people and seizing thousands of pirate high-tech software programs, Gree
+  ID 111 | Sci/Tech | World -> Sci/Tech
+     Haber: Promoting a Shared Vision As Michael Kaleko kept running into people who were getting older and having more vision problems, he realized he could do something about it.
+NOT: Diğer 23 yanlış haber her iki run’da da yanlış. Kararı değişen 5 haberin
+tamamı Q8’de düzelmiş; buna karşın tek bir çalıştırma sonucu genelleştirilemez.
+
+5. JSON VE ENTITY EXTRACTION FARKLARI
+----------------------------------------------------------------------
+Ham model_response metni farklı: 44/120
+parsed_data nesnesi farklı: 32/120
+Kategori değişmeden entity içeriği farklı: 27/120
+persons alanı farklı: 4/120
+organizations alanı farklı: 18/120
+locations alanı farklı: 10/120
+Run10 hiçbir entity çıkarmayan haber sayısı: 4/120
+Run11 hiçbir entity çıkarmayan haber sayısı: 4/120
+ÖRNEKLER (JSON içeriğinden alınmıştır):
+  ID 1 | kategori Business
+    Q4: {"category": "World", "persons": [], "organizations": [], "locations": ["WASHINGTON", "US"]}
+    Q8: {"category": "World", "persons": [], "organizations": [], "locations": ["Washington", "US"]}
+  ID 7 | kategori Business
+    Q4: {"category": "Business", "persons": [], "organizations": ["Kmart Holdings Corp", "Home Depot Inc"], "locations": []}
+    Q8: {"category": "Business", "persons": [], "organizations": ["Kmart Holdings Corp.", "Home Depot Inc."], "locations": []}
+  ID 14 | kategori World
+    Q4: {"category": "World", "persons": ["Bush", "Tony Blair"], "organizations": [], "locations": []}
+    Q8: {"category": "World", "persons": ["George W. Bush", "Tony Blair"], "organizations": [], "locations": []}
+  ID 28 | kategori World
+    Q4: {"category": "World", "persons": [], "organizations": ["United States", "Washington's envoy to Kabul"], "locations": ["Kabul", "Herat"]}
+    Q8: {"category": "World", "persons": ["renegade Afghan militia leader", "embattled governor of the western province of Herat"], "organizations": ["United States", "Washington's envoy to Kabul"], "locations": ["Kabul", "western province of Herat"]}
+  ID 30 | kategori World
+    Q4: {"category": "World", "persons": ["Bush"], "organizations": ["United States"], "locations": []}
+    Q8: {"category": "World", "persons": ["Bush"], "organizations": ["China"], "locations": []}
+  ID 41 | kategori Sports
+    Q4: {"category": "Sports", "persons": ["Brandon Backe"], "organizations": ["Houston Astros", "Cincinnati Reds"], "locations": ["Houston", "Cincinnati"]}
+    Q8: {"category": "Sports", "persons": ["Brandon Backe"], "organizations": ["Houston Astros", "Cincinnati Reds"], "locations": []}
+  ID 54 | kategori World
+    Q4: {"category": "World", "persons": ["Karzai", "At"], "organizations": ["US", "Afghan"], "locations": ["Herat"]}
+    Q8: {"category": "World", "persons": ["Karzai", "At"], "organizations": ["US", "Afghan security forces"], "locations": ["Herat"]}
+  ID 73 | kategori World
+    Q4: {"category": "World", "persons": [], "organizations": [], "locations": ["Japan", "South Korea"]}
+    Q8: {"category": "World", "persons": ["six crew members"], "organizations": ["South Korean cargo ship"], "locations": ["Japan", "breakwater"]}
+  ID 113 | kategori World
+    Q4: {"category": "World", "persons": ["Ariel Sharon"], "organizations": [], "locations": ["Israel"]}
+    Q8: {"category": "World", "persons": ["Ariel Sharon"], "organizations": ["Israel's parliament"], "locations": ["Israel"]}
+DİKKAT: JSON yapısal doğruluğu = entity anlamsal doğruluğu değildir.
+Örn. ID 28 Q8’de isim verilmeyen kişileri persons listesine koymuştur;
+ID 14’te “George W. Bush” genişletmesi haberin metninde birebir bulunmayabilir.
+Dolayısıyla entity’ler için etiketli referans olmadan Q8’in NER doğruluğu
+Q4’ten daha iyidir diyemeyiz.
+
+6. CONFUSION MATRIX (SATIR: GERÇEK, SÜTUN: TAHMİN)
+----------------------------------------------------------------------
+Run10 (sütunlar: World, Sports, Business, Sci/Tech)
+  World    : [27, 0, 2, 1]
+  Sports   : [1, 29, 0, 0]
+  Business : [10, 0, 17, 3]
+  Sci/Tech : [9, 0, 2, 19]
+Run11 (sütunlar: World, Sports, Business, Sci/Tech)
+  World    : [27, 0, 2, 1]
+  Sports   : [0, 30, 0, 0]
+  Business : [9, 0, 19, 2]
+  Sci/Tech : [7, 0, 2, 21]
+
+8. METODOLOJİ NOTLARI
+----------------------------------------------------------------------
+• Q4_K_M ile Q8_0 farklı ağırlık quantization türleridir; 4B parametre sayısı sabit.
+• JSON Schema ya da format="json" kullanılmadı; sadece prompt ile JSON istendi.
+• Saniye ölçümleri uygulama tarafından kaydedildi; ilk haberin yükleme/ısınma
+  maliyeti ayrıştırıldığı için ana hız kıyasını ilk haber hariç yaptık.
+• Bu ölçüm GPU üzerindeki aynı yerleşimi kontrol etmiyor: Q8 CPU+GPU, Q4 GPU.
+• 120 haberlik tek seri, tüm haber/donanım kombinasyonları için garantili sonuç değildir.

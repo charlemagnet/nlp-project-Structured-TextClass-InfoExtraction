@@ -1,19 +1,18 @@
-
 import json
 from pathlib import Path
 from ollama import chat
 from core.prompts import TASK_INSTRUCTIONS
+from core.main import MODEL, TEMPERATURE, SEED, NUM_PREDICT, NUM_CTX
 
 # Project settings
 PROJECT_DIR = Path(__file__).resolve().parent.parent
 DATA_FILE = PROJECT_DIR / "data" / "evaluation_samples.json"
 
-MODEL = "qwen3:4b"
-
 OPTIONS = {
-    "temperature": 0,
-    "seed": 42,
-    "num_predict": 4096
+    "temperature": TEMPERATURE,
+    "seed": SEED,
+    "num_predict": NUM_PREDICT,
+    "num_ctx": NUM_CTX
 }
 
 # Load evaluation dataset
